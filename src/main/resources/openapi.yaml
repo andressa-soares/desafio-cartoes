@@ -1,0 +1,339 @@
+openapi: 3.0.3
+
+info:
+  title: API de Cartões de Crédito
+  description: |
+    Recebe os dados de um cliente e retorna os produtos de cartão de crédito
+    elegíveis de acordo com o perfil (renda mensal, idade e UF de residência).
+
+    ## Produtos
+
+    | Produto              | Limite      | Renda mínima | Anuidade mensal |
+    |----------------------|-------------|--------------|-----------------|
+    | CARTAO_SEM_ANUIDADE  | R$ 1.000,00 | R$ 3.500,00  | R$ 0,00         |
+    | CARTAO_DE_PARCEIROS  | R$ 3.000,00 | R$ 5.500,00  | R$ 10,00        |
+    | CARTAO_COM_CASHBACK  | R$ 5.000,00 | R$ 7.500,00  | R$ 20,00        |
+
+    ## Regras de elegibilidade
+
+    1. **Renda**: o cliente é candidato a todos os produtos cuja renda mínima ele atinge.
+       Se não atingir nenhuma, a solicitação é recusada (422).
+    2. **Perfil**: sobre os candidatos por renda, aplicam-se filtros de perfil.
+       Cada filtro apenas remove produtos; o resultado é a interseção de todos.
+       - Idade entre 18 e 24 anos: somente CARTAO_SEM_ANUIDADE.
+       - Residente em SP: somente CARTAO_SEM_ANUIDADE e CARTAO_COM_CASHBACK,
+         exceto se tiver entre 25 e 29 anos, caso em que não há restrição.
+    3. Se nenhum produto restar após os filtros de perfil, a resposta é 204.
+
+    A idade utilizada nas regras é calculada a partir de `data_nascimento`.
+    O campo `idade` é obrigatório e deve ser coerente com a data informada.
+  version: 1.0.0
+  contact:
+    name: Equipe do desafio
+
+servers:
+  - url: http://localhost:8080
+    description: Ambiente local
+
+tags:
+  - name: Cartões
+    description: Solicitação de cartões de crédito
+
+paths:
+  /cartoes:
+    post:
+      tags:
+        - Cartões
+      summary: Solicita cartões de crédito para um cliente
+      description: |
+        Valida os dados do cliente, aplica as regras de elegibilidade e retorna
+        os cartões aprovados. Apenas cartões com status `APROVADO` são listados.
+      operationId: solicitarCartoes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SolicitacaoRequest'
+            examples:
+              rendaAlta:
+                summary: 32 anos, SP, renda 8000 → cashback e sem anuidade
+                value:
+                  cliente:
+                    nome: Cliente Teste
+                    cpf: 123.456.789-10
+                    idade: 32
+                    data_nascimento: '1994-01-01'
+                    uf: SP
+                    renda_mensal: 8000.00
+                    email: cliente@teste.com
+                    telefone_whatsapp: '11999992020'
+              jovem:
+                summary: 22 anos, RJ, renda 9000 → somente sem anuidade
+                value:
+                  cliente:
+                    nome: Cliente Jovem
+                    cpf: 987.654.321-00
+                    idade: 22
+                    data_nascimento: '2004-03-15'
+                    uf: RJ
+                    renda_mensal: 9000.00
+                    email: jovem@teste.com
+                    telefone_whatsapp: '21988887777'
+      responses:
+        '200':
+          description: Cliente possui ao menos um cartão aprovado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolicitacaoResponse'
+              example:
+                numero_solicitacao: 745f2812-c3f4-42ce-93fb-e119e643bda2
+                data_solicitacao: '2026-09-22T10:15:30.123'
+                cliente:
+                  nome: Cliente Teste
+                  cpf: 123.456.789-10
+                  idade: 32
+                  data_nascimento: '1994-01-01'
+                  uf: SP
+                  renda_mensal: 8000.00
+                  email: cliente@teste.com
+                  telefone_whatsapp: '11999992020'
+                cartoes_ofertados:
+                  - tipo_cartao: CARTAO_SEM_ANUIDADE
+                    valor_anuidade_mensal: 0.00
+                    valor_limite_disponivel: 1000.00
+                    status: APROVADO
+                  - tipo_cartao: CARTAO_COM_CASHBACK
+                    valor_anuidade_mensal: 20.00
+                    valor_limite_disponivel: 5000.00
+                    status: APROVADO
+        '204':
+          description: |
+            Solicitação processada, mas nenhum cartão foi aprovado após a
+            aplicação das regras de perfil. Sem corpo de resposta.
+        '400':
+          description: |
+            Payload inválido: JSON malformado, campo obrigatório ausente,
+            renda negativa, cliente menor de 18 anos ou `idade` incoerente
+            com `data_nascimento`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResponse'
+              example:
+                codigo: '400'
+                mensagem: Requisição inválida.
+                detalhe_erro:
+                  app: desafio-cartoes
+                  tipo_erro: ERRO_VALIDACAO
+                  mensagem_interna: 'cliente.renda_mensal: deve ser maior ou igual a zero'
+        '415':
+          description: Content-Type diferente de `application/json`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResponse'
+              example:
+                codigo: '415'
+                mensagem: Formato não suportado.
+                detalhe_erro:
+                  app: desafio-cartoes
+                  tipo_erro: FORMATO_NAO_SUPORTADO
+                  mensagem_interna: A API aceita apenas application/json.
+        '422':
+          description: |
+            Regra de negócio não atendida. Exemplo: renda mensal abaixo da
+            renda mínima de todos os produtos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResponse'
+              example:
+                codigo: '422'
+                mensagem: Regra de negócio não atendida.
+                detalhe_erro:
+                  app: desafio-cartoes
+                  tipo_erro: RENDA_INSUFICIENTE
+                  mensagem_interna: Renda mensal não atende à renda mínima de nenhum produto.
+        '500':
+          description: Erro inesperado. Detalhes internos não são expostos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResponse'
+              example:
+                codigo: '500'
+                mensagem: Um erro inesperado ocorreu.
+                detalhe_erro:
+                  app: desafio-cartoes
+                  tipo_erro: ERRO_INTERNO
+                  mensagem_interna: Tivemos um problema, mas fique tranquilo que nosso time já foi avisado.
+
+components:
+  schemas:
+
+    SolicitacaoRequest:
+      type: object
+      required:
+        - cliente
+      properties:
+        cliente:
+          $ref: '#/components/schemas/Cliente'
+
+    Cliente:
+      type: object
+      required:
+        - nome
+        - cpf
+        - idade
+        - data_nascimento
+        - uf
+        - renda_mensal
+        - email
+        - telefone_whatsapp
+      properties:
+        nome:
+          type: string
+          description: Nome completo do cliente.
+          minLength: 1
+          example: Cliente Teste
+        cpf:
+          type: string
+          description: CPF do cliente.
+          example: 123.456.789-10
+        idade:
+          type: integer
+          description: Idade do cliente. Deve ser coerente com `data_nascimento`.
+          minimum: 18
+          example: 32
+        data_nascimento:
+          type: string
+          format: date
+          description: Data de nascimento (ISO 8601). Fonte da verdade para a idade.
+          example: '1994-01-01'
+        uf:
+          type: string
+          description: UF de residência do cliente.
+          pattern: '^[A-Z]{2}$'
+          example: SP
+        renda_mensal:
+          type: number
+          format: double
+          description: Renda mensal em reais. Não aceita valor negativo.
+          minimum: 0
+          example: 8000.00
+        email:
+          type: string
+          format: email
+          description: E-mail principal do cliente.
+          example: cliente@teste.com
+        telefone_whatsapp:
+          type: string
+          description: Telefone com WhatsApp, apenas dígitos com DDD.
+          example: '11999992020'
+
+    SolicitacaoResponse:
+      type: object
+      required:
+        - numero_solicitacao
+        - data_solicitacao
+        - cliente
+        - cartoes_ofertados
+      properties:
+        numero_solicitacao:
+          type: string
+          format: uuid
+          description: Identificador único da solicitação.
+          example: 745f2812-c3f4-42ce-93fb-e119e643bda2
+        data_solicitacao:
+          type: string
+          description: Data e hora do processamento (ISO 8601, sem fuso).
+          example: '2026-09-22T10:15:30.123'
+        cliente:
+          $ref: '#/components/schemas/Cliente'
+        cartoes_ofertados:
+          type: array
+          description: Cartões aprovados para o cliente. Nunca vazio em respostas 200.
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CartaoOfertado'
+
+    CartaoOfertado:
+      type: object
+      required:
+        - tipo_cartao
+        - valor_anuidade_mensal
+        - valor_limite_disponivel
+        - status
+      properties:
+        tipo_cartao:
+          $ref: '#/components/schemas/TipoCartao'
+        valor_anuidade_mensal:
+          type: number
+          format: double
+          description: Anuidade mensal em reais. Sempre `0.00` para CARTAO_SEM_ANUIDADE.
+          example: 20.00
+        valor_limite_disponivel:
+          type: number
+          format: double
+          description: Limite de crédito disponível em reais.
+          example: 5000.00
+        status:
+          $ref: '#/components/schemas/StatusCartao'
+
+    TipoCartao:
+      type: string
+      enum:
+        - CARTAO_SEM_ANUIDADE
+        - CARTAO_DE_PARCEIROS
+        - CARTAO_COM_CASHBACK
+
+    StatusCartao:
+      type: string
+      description: Somente cartões aprovados são retornados.
+      enum:
+        - APROVADO
+
+    ErroResponse:
+      type: object
+      required:
+        - codigo
+        - mensagem
+        - detalhe_erro
+      properties:
+        codigo:
+          type: string
+          description: Código HTTP da resposta, como string.
+          example: '422'
+        mensagem:
+          type: string
+          description: Mensagem resumida para o cliente da API.
+          example: Regra de negócio não atendida.
+        detalhe_erro:
+          $ref: '#/components/schemas/DetalheErro'
+
+    DetalheErro:
+      type: object
+      required:
+        - app
+        - tipo_erro
+        - mensagem_interna
+      properties:
+        app:
+          type: string
+          description: Nome do serviço que gerou o erro.
+          example: desafio-cartoes
+        tipo_erro:
+          type: string
+          description: Classificação do erro.
+          enum:
+            - ERRO_VALIDACAO
+            - FORMATO_NAO_SUPORTADO
+            - RENDA_INSUFICIENTE
+            - ERRO_INTERNO
+          example: RENDA_INSUFICIENTE
+        mensagem_interna:
+          type: string
+          description: Detalhe do erro. Nunca expõe stack trace ou dados sensíveis.
+          example: Renda mensal não atende à renda mínima de nenhum produto.

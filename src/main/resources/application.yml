@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: desafio-cartoes
+
+cartoes:
+  idade-minima: 18
+  faixa-jovem:
+    inicio: 18
+    fim: 24
+  faixa-excecao-residente-sp:
+    inicio: 25
+    fim: 29
+  produtos:
+    - tipo: CARTAO_SEM_ANUIDADE
+      renda-minima: 3500.00
+      limite: 1000.00
+      anuidade-mensal: 0.00
+    - tipo: CARTAO_DE_PARCEIROS
+      renda-minima: 5500.00
+      limite: 3000.00
+      anuidade-mensal: 10.00
+    - tipo: CARTAO_COM_CASHBACK
+      renda-minima: 7500.00
+      limite: 5000.00
+      anuidade-mensal: 20.00

@@ -74,7 +74,7 @@ br.com.desafio.cartoes
 │   └── exception  (RegraNegocioException)
 └── config
     ├── CartoesProperties
-    └── ProdutosConfig
+    └── CartoesConfig
 ```
 
 Organização por camada, adequada a um único contexto de negócio. Se surgir um segundo
@@ -221,17 +221,38 @@ Toda exceção passa por um único `GlobalExceptionHandler`, que produz o payloa
 
 ## 7. Configuração
 
-Parâmetros de negócio ficam no `application.yml`, lidos por `CartoesProperties` e convertidos
-em objetos de domínio por `ProdutosConfig`:
+Parâmetros de negócio ficam no `application.yml`, lidos por `CartoesProperties`
+(`@ConfigurationProperties` + `@Validated`) e convertidos em objetos de domínio por
+`CartoesConfig`:
 
 ```yaml
 cartoes:
   idade-minima: 18
+  faixa-jovem:
+    inicio: 18
+    fim: 24
+  faixa-excecao-residente-sp:
+    inicio: 25
+    fim: 29
   produtos:
-    CARTAO_SEM_ANUIDADE: { renda-minima: 3500.00, limite: 1000.00, anuidade-mensal: 0.00 }
-    CARTAO_DE_PARCEIROS: { renda-minima: 5500.00, limite: 3000.00, anuidade-mensal: 10.00 }
-    CARTAO_COM_CASHBACK: { renda-minima: 7500.00, limite: 5000.00, anuidade-mensal: 20.00 }
+    - tipo: CARTAO_SEM_ANUIDADE
+      renda-minima: 3500.00
+      limite: 1000.00
+      anuidade-mensal: 0.00
+    - tipo: CARTAO_DE_PARCEIROS
+      renda-minima: 5500.00
+      limite: 3000.00
+      anuidade-mensal: 10.00
+    - tipo: CARTAO_COM_CASHBACK
+      renda-minima: 7500.00
+      limite: 5000.00
+      anuidade-mensal: 20.00
 ```
+
+Produtos são lista, não mapa: um mapa normalizaria a chave (o Spring costuma converter o
+nome do enum para lowercase-hífen ao usá-lo como chave de propriedade) e não garante ordem
+de leitura; a lista preserva ambos, e a ordem do yml passa a ser a ordem dos cartões na
+resposta.
 
 Regra do projeto: **nenhum valor de negócio aparece como literal no código**, inclusive em
 mensagens de erro. Parâmetro é config; comportamento é código. Alterar um valor exige restart,
@@ -254,6 +275,7 @@ o que em produção é um rolling restart via deploy, com a mudança versionada 
 | 11 | DTOs separados do domínio | Nomes exatos do contrato sem Jackson vazando para as regras |
 | 12 | `BigDecimal` para valores monetários | Precisão e formato `0.00` exigido |
 | 13 | Anuidade de CARTAO_DE_PARCEIROS = 10,00 | Enunciado não define; valor de estudo, parametrizado |
+| 14 | Filtro de renda criado via `@Bean` e regras de perfil via `@Component` | O filtro é único e montado a partir do config; as regras são várias e descobertas automaticamente |
 
 ## 9. Ambiguidades do enunciado e resolução
 

@@ -3,6 +3,7 @@ package br.com.desafio.cartoes.domain.regra;
 import br.com.desafio.cartoes.domain.model.Cliente;
 import br.com.desafio.cartoes.domain.model.FaixaEtaria;
 import br.com.desafio.cartoes.domain.model.TipoCartao;
+import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.Set;
    A exceção está aqui, porque é exceção a esta regra: sozinha ela não descreve
    critério algum de elegibilidade, apenas desliga a restrição de SP para uma faixa de idade. */
 
+@Component
 public class RegraResidenteSp implements RegraElegibilidade {
 
     private static final String UF = "SP";

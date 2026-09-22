@@ -65,6 +65,10 @@ public final class ClienteFixture {
         return this;
     }
 
+    public ClienteFixture comIdadeEmSp(int idade) {
+        return comIdade(idade).comUf("SP");
+    }
+
     public Cliente build() {
         return new Cliente(nome, cpf, idade, dataNascimento, uf, rendaMensal, email, telefoneWhatsapp);
     }

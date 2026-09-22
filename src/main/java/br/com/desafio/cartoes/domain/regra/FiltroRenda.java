@@ -5,12 +5,9 @@ import br.com.desafio.cartoes.domain.model.Produto;
 
 import java.util.List;
 
-/**
- * Primeira etapa da análise: seleciona os produtos cuja renda mínima o
- * cliente atinge. É a fronteira entre análise de crédito e adequação de
- * perfil. Se nenhum produto passar, a solicitação é recusada (422); a
- * decisão de recusar é do service, este filtro apenas devolve a lista.
- */
+/* Seleciona os produtos cuja renda mínima o cliente atinge.
+   É a fronteira entre análise de crédito e adequação de perfil. */
+
 public class FiltroRenda {
 
     private final List<Produto> produtos;

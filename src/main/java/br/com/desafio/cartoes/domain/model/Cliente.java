@@ -36,8 +36,4 @@ public record Cliente(
     public boolean resideEm(String uf) {
         return this.uf.equalsIgnoreCase(uf);
     }
-
-    public boolean temIdadeEntre(int inicio, int fimInclusivo) {
-        return idade >= inicio && idade <= fimInclusivo;
-    }
 }

@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -195,82 +194,6 @@ class ClienteTest {
             var resultado = cliente.resideEm(ufConsultada);
 
             assertThat(resultado).isTrue();
-        }
-    }
-
-    @Nested
-    @DisplayName("temIdadeEntre")
-    class TemIdadeEntre {
-
-        @Test
-        @DisplayName("inclui a idade exatamente no início da faixa")
-        void incluiInicioDaFaixa() {
-            var cliente = umCliente().comIdade(18).build();
-
-            var resultado = cliente.temIdadeEntre(18, 24);
-
-            assertThat(resultado).isTrue();
-        }
-
-        @Test
-        @DisplayName("inclui a idade exatamente no fim da faixa")
-        void incluiFimDaFaixa() {
-            var cliente = umCliente().comIdade(24).build();
-
-            var resultado = cliente.temIdadeEntre(18, 24);
-
-            assertThat(resultado).isTrue();
-        }
-
-        @Test
-        @DisplayName("exclui a idade um ano abaixo do início da faixa")
-        void excluiIdadeAbaixoDaFaixa() {
-            var cliente = umCliente().comIdade(17).build();
-
-            var resultado = cliente.temIdadeEntre(18, 24);
-
-            assertThat(resultado).isFalse();
-        }
-
-        @Test
-        @DisplayName("exclui a idade um ano acima do fim da faixa")
-        void excluiIdadeAcimaDaFaixa() {
-            var cliente = umCliente().comIdade(25).build();
-
-            var resultado = cliente.temIdadeEntre(18, 24);
-
-            assertThat(resultado).isFalse();
-        }
-
-        @ParameterizedTest(name = "idade {0} está dentro da faixa")
-        @ValueSource(ints = {19, 20, 21, 22, 23})
-        @DisplayName("inclui as idades no interior da faixa")
-        void incluiIdadesNoInteriorDaFaixa(int idade) {
-            var cliente = umCliente().comIdade(idade).build();
-
-            var resultado = cliente.temIdadeEntre(18, 24);
-
-            assertThat(resultado).isTrue();
-        }
-
-        @Test
-        @DisplayName("aceita faixa de um único ano quando a idade coincide")
-        void aceitaFaixaDeUmUnicoAno() {
-            var cliente = umCliente().comIdade(30).build();
-
-            var resultado = cliente.temIdadeEntre(30, 30);
-
-            assertThat(resultado).isTrue();
-        }
-
-        @Test
-        @DisplayName("não inclui idade alguma quando a faixa está invertida")
-        void naoIncluiIdadeQuandoFaixaEstaInvertida() {
-            var cliente = umCliente().comIdade(27).build();
-
-            var resultado = cliente.temIdadeEntre(30, 25);
-
-            assertThat(resultado).isFalse();
         }
     }
 }

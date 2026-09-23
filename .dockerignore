@@ -1,0 +1,7 @@
+target/
+.git/
+.idea/
+*.iml
+docs/
+CLAUDE.md
+README.md

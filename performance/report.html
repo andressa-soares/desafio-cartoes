@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stress test — POST /cartoes</title>
+<style>
+  :root {
+    --bg: #eef1ea;
+    --surface: #ffffff;
+    --ink: #16211c;
+    --muted: #5b6b62;
+    --rule: #d7dcd3;
+    --pass: #1f7a4d;
+    --fail: #b3261e;
+    --bar: #2b3a33;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 48px 24px 96px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .kicker {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 6px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    margin: 0 0 40px;
+  }
+
+  .verdict {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 22px 24px;
+    background: var(--surface);
+    border-left: 4px solid var(--pass);
+    margin-bottom: 36px;
+  }
+
+  .verdict.fail { border-left-color: var(--fail); }
+
+  .verdict-tag {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--pass);
+    white-space: nowrap;
+  }
+
+  .verdict.fail .verdict-tag { color: var(--fail); }
+
+  .verdict-reason {
+    font-size: 14.5px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  section {
+    margin-bottom: 40px;
+  }
+
+  .section-label {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+
+  .readout {
+    display: flex;
+    flex-wrap: wrap;
+    background: var(--surface);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .stat {
+    flex: 1 1 150px;
+    padding: 18px 20px;
+    border-right: 1px solid var(--rule);
+  }
+
+  .stat:last-child { border-right: none; }
+
+  .stat-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .stat-label {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .bars {
+    background: var(--surface);
+    padding: 20px 24px 8px;
+  }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: 48px 1fr 72px;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .bar-row:last-child { border-bottom: none; }
+
+  .bar-name {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .bar-track {
+    background: var(--rule);
+    height: 8px;
+  }
+
+  .bar-fill {
+    background: var(--bar);
+    height: 8px;
+  }
+
+  .bar-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    text-align: right;
+  }
+
+  .note {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 12px 0 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+  }
+
+  th, td {
+    text-align: left;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--rule);
+    font-size: 14px;
+  }
+
+  th {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+    border-top: 1px solid var(--rule);
+  }
+
+  td.expr {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+  }
+
+  td.result {
+    font-weight: 650;
+  }
+
+  td.result.pass { color: var(--pass); }
+  td.result.fail { color: var(--fail); }
+
+  tr:last-child td { border-bottom: none; }
+
+  p.analysis {
+    font-size: 15px;
+    line-height: 1.65;
+    background: var(--surface);
+    padding: 22px 24px;
+    margin: 0;
+  }
+
+  footer {
+    margin-top: 56px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <p class="kicker">k6 · relatório de stress test</p>
+    <h1>POST /cartoes — 800 VUs de pico, 3m 30s</h1>
+
+    <div class="verdict">
+      <span class="verdict-tag">PASSOU</span>
+      <span class="verdict-reason">Threshold de erro (&lt;5%) cumprido com folga: 0,00% de falhas em 80.227 requisições até 800 VUs simultâneos.</span>
+    </div>
+
+    <section>
+      <p class="section-label">visão geral</p>
+      <div class="readout">
+        <div class="stat">
+          <div class="stat-value">381,35</div>
+          <div class="stat-label">req/s</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">80.227</div>
+          <div class="stat-label">requisições totais</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">0,00%</div>
+          <div class="stat-label">taxa de erro</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">99,95%</div>
+          <div class="stat-label">checks aprovados</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">800</div>
+          <div class="stat-label">VUs pico</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">3m 30s</div>
+          <div class="stat-label">duração total</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="section-label">latência (ms)</p>
+      <div class="bars">
+        <div class="bar-row">
+          <span class="bar-name">avg</span>
+          <div class="bar-track"><div class="bar-fill" style="width: 94.6%"></div></div>
+          <span class="bar-value">4,1</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-name">p90</span>
+          <div class="bar-track"><div class="bar-fill" style="width: 72.8%"></div></div>
+          <span class="bar-value">3,2</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-name">p95</span>
+          <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+          <span class="bar-value">4,3</span>
+        </div>
+      </div>
+      <p class="note">p99 não foi coletado neste run (fora de <code>summaryTrendStats</code>). O valor máximo isolado foi 1.066,6 ms, um outlier único durante o platô de 800 VUs — não aparece na barra por distorcer a escala.</p>
+    </section>
+
+    <section>
+      <p class="section-label">thresholds</p>
+      <table>
+        <thead>
+          <tr><th>threshold</th><th>resultado</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="expr">http_req_failed: rate&lt;0.05</td>
+            <td class="result pass">PASSOU</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <p class="section-label">checks</p>
+      <table>
+        <thead>
+          <tr><th>check</th><th>aprovação</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>status bate com o esperado para a massa</td>
+            <td class="result pass">80.227 / 80.227</td>
+          </tr>
+          <tr>
+            <td>tempo de resposta &lt; 500ms</td>
+            <td class="result pass">80.099 / 80.227</td>
+          </tr>
+          <tr>
+            <td>corpo tem o formato esperado</td>
+            <td class="result pass">80.227 / 80.227</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <p class="section-label">leitura</p>
+      <p class="analysis">Taxa de erro em 0,00% e p95 em 4,3 ms até 800 VUs simultâneos. O único sinal de tensão veio do check informal de latência (&lt;500ms): 128 das 80.227 requisições passaram desse limite, todas concentradas no platô de pico, com um outlier isolado de 1,07s. Nada nesse teste indica onde a API realmente quebra — o próximo passo é repetir o stress com pico maior (1500–3000 VUs) ou estender a permanência em 800 VUs, para achar o teto de verdade.</p>
+    </section>
+
+    <footer>Gerado a partir de summary.json · POST /cartoes · desafio-cartoes</footer>
+  </div>
+</body>
+</html>

@@ -7,14 +7,10 @@ import java.util.EnumSet;
 import java.util.Collections;
 import java.util.Set;
 
-/* Regra de adequação de perfil aplicada sobre os candidatos que já passaram pelo filtro de renda.
-
-   Contrato de toda implementação:
-     Só remove candidatos, nunca adiciona um tipo que não estava na entrada;
-     Devolve os próprios candidatos quando a regra não se aplica ao cliente;
-     Não depende das demais regras: o resultado final é a interseção de todas,
-     portanto a ordem de aplicação é irrelevante. */
-
+// Contrato de toda implementação: só remove candidatos, nunca adiciona um tipo
+// que não estava na entrada; devolve os próprios candidatos quando não se aplica
+// ao cliente; não depende das demais regras, então a ordem de aplicação é
+// irrelevante — o resultado final é a interseção de todas.
 public interface RegraElegibilidade {
 
     Set<TipoCartao> aplicar(Cliente cliente, Set<TipoCartao> candidatos);

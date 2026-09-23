@@ -8,12 +8,8 @@ import org.springframework.stereotype.Component;
 import java.util.Objects;
 import java.util.Set;
 
-/* Residente em SP não recebe o cartão de parceiros, exceto na faixa etária de
-   exceção prevista, em que nada é restringido.
-
-   A exceção está aqui, porque é exceção a esta regra: sozinha ela não descreve
-   critério algum de elegibilidade, apenas desliga a restrição de SP para uma faixa de idade. */
-
+// A exceção está aqui porque é exceção a esta regra: sozinha, ela não descreve
+// nenhum critério de elegibilidade, só desliga a restrição de SP para uma faixa de idade.
 @Component
 public class RegraResidenteSp implements RegraElegibilidade {
 

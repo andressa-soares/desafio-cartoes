@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
-// A 'idade' é calculada a partir de 'dataNascimento'.
-
 public record Cliente(
         String nome,
         String cpf,

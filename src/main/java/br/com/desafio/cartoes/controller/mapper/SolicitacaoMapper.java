@@ -32,12 +32,10 @@ public class SolicitacaoMapper {
         this.propriedades = propriedades;
     }
 
-    /*
-     * Idade mínima e coerência idade/data_nascimento não cabem em anotação Bean
-     * Validation: a primeira vem da configuração (não é uma constante de
-     * compilação) e a segunda cruza dois campos do DTO. Por isso ficam aqui,
-     * junto do cálculo da idade que as duas checagens precisam de qualquer forma.
-     */
+    // Idade mínima e coerência idade/data_nascimento não cabem em anotação Bean
+    // Validation: a primeira vem da configuração (não é uma constante de
+    // compilação) e a segunda cruza dois campos do DTO. Por isso ficam aqui,
+    // junto do cálculo da idade que as duas checagens precisam de qualquer forma.
     public Cliente toCliente(ClienteDto dto) {
         int idadeCalculada = Period.between(dto.dataNascimento(), LocalDate.now(clock)).getYears();
 

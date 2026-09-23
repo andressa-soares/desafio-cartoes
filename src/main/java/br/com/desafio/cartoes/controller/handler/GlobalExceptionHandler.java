@@ -4,6 +4,7 @@ import br.com.desafio.cartoes.controller.dto.ErroResponse;
 import br.com.desafio.cartoes.controller.exception.RequisicaoInvalidaException;
 import br.com.desafio.cartoes.domain.exception.RegraNegocioException;
 import br.com.desafio.cartoes.domain.exception.TipoErro;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,16 +18,13 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/*
- * Único ponto de conversão de exceção em resposta HTTP: toda resposta de erro
- * da API sai daqui, sempre no payload {codigo, mensagem, detalhe_erro}.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -58,21 +56,27 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(RegraNegocioException.class)
-    public ResponseEntity<ErroResponse> tratarRegraNegocio(RegraNegocioException excecao) {
-        log.warn("Regra de negócio não atendida: tipoErro={} status={}", excecao.tipoErro(), HttpStatus.UNPROCESSABLE_ENTITY.value());
+    public ResponseEntity<ErroResponse> tratarRegraNegocio(RegraNegocioException excecao, HttpServletRequest requisicao) {
+        log.warn("evento=regra_negocio_violada excecao={} metodo={} caminho={} status={} tipo_erro={}",
+                excecao.getClass().getSimpleName(), requisicao.getMethod(), requisicao.getRequestURI(),
+                HttpStatus.UNPROCESSABLE_ENTITY.value(), excecao.tipoErro());
         return responder(HttpStatus.UNPROCESSABLE_ENTITY, MENSAGEM_REGRA_NEGOCIO, excecao.tipoErro(), excecao.getMessage());
     }
 
     @ExceptionHandler(RequisicaoInvalidaException.class)
-    public ResponseEntity<ErroResponse> tratarRequisicaoInvalida(RequisicaoInvalidaException excecao) {
-        log.warn("Requisição inválida: status={}", HttpStatus.BAD_REQUEST.value());
+    public ResponseEntity<ErroResponse> tratarRequisicaoInvalida(RequisicaoInvalidaException excecao, HttpServletRequest requisicao) {
+        log.warn("evento=requisicao_invalida excecao={} metodo={} caminho={} status={} tipo_erro={}",
+                excecao.getClass().getSimpleName(), requisicao.getMethod(), requisicao.getRequestURI(),
+                HttpStatus.BAD_REQUEST.value(), TipoErro.ERRO_VALIDACAO);
         return responder(HttpStatus.BAD_REQUEST, MENSAGEM_REQUISICAO_INVALIDA, TipoErro.ERRO_VALIDACAO, excecao.getMessage());
     }
 
     @Override
     protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(
             HttpMediaTypeNotSupportedException excecao, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        log.warn("Content-Type não suportado: status={}", status.value());
+        log.warn("evento=formato_nao_suportado excecao={} metodo={} caminho={} status={} tipo_erro={}",
+                excecao.getClass().getSimpleName(), metodoDe(request), caminhoDe(request),
+                HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), TipoErro.FORMATO_NAO_SUPORTADO);
         return responderObjeto(headers, HttpStatus.UNSUPPORTED_MEDIA_TYPE, MENSAGEM_REQUISICAO_INVALIDA,
                 TipoErro.FORMATO_NAO_SUPORTADO, MENSAGEM_INTERNA_FORMATO_NAO_SUPORTADO);
     }
@@ -80,7 +84,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
             HttpMessageNotReadableException excecao, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        log.warn("Corpo da requisição inválido: status={}", status.value());
+        log.warn("evento=corpo_invalido excecao={} metodo={} caminho={} status={} tipo_erro={}",
+                excecao.getClass().getSimpleName(), metodoDe(request), caminhoDe(request),
+                HttpStatus.BAD_REQUEST.value(), TipoErro.ERRO_VALIDACAO);
         // Nunca ecoar excecao.getMessage(): a mensagem crua do Jackson pode conter
         // trechos do corpo enviado, inclusive dados do cliente.
         return responderObjeto(headers, HttpStatus.BAD_REQUEST, MENSAGEM_REQUISICAO_INVALIDA,
@@ -90,7 +96,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException excecao, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        log.warn("Validação de entrada falhou: status={} violacoes={}", status.value(), excecao.getBindingResult().getErrorCount());
+        log.warn("evento=validacao_falhou excecao={} metodo={} caminho={} status={} tipo_erro={} violacoes={}",
+                excecao.getClass().getSimpleName(), metodoDe(request), caminhoDe(request),
+                HttpStatus.BAD_REQUEST.value(), TipoErro.ERRO_VALIDACAO, excecao.getBindingResult().getErrorCount());
 
         String mensagemInterna = excecao.getBindingResult().getFieldErrors().stream()
                 .map(erro -> nomeDoCampoNoContrato(erro.getField()) + ": " + erro.getDefaultMessage())
@@ -101,25 +109,38 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 TipoErro.ERRO_VALIDACAO, mensagemInterna);
     }
 
-    // Cobre qualquer exceção que a superclasse resolveria com seu próprio corpo
-    // padrão (ProblemDetail) — inclusive 404 (rota inexistente) e 405 (método não
-    // suportado) — e a converte para o payload desta API. Mensagem interna fixa,
-    // nunca a mensagem da exceção: este método é a rede de segurança para
-    // exceções que ainda não têm tratamento dedicado, então não é possível
-    // garantir de antemão que a mensagem delas nunca carregue dado do cliente.
+    // Rede de segurança para exceções sem handler dedicado (inclusive 404 e 405).
+    // Mensagem sempre fixa: não sabemos de antemão se excecao.getMessage() é segura.
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
             Exception excecao, Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
         HttpStatus status = HttpStatus.valueOf(statusCode.value());
-        log.warn("Requisição rejeitada: status={} excecao={}", status.value(), excecao.getClass().getSimpleName());
+        log.warn("evento=requisicao_nao_tratada excecao={} metodo={} caminho={} status={} tipo_erro={}",
+                excecao.getClass().getSimpleName(), metodoDe(request), caminhoDe(request), status.value(), TipoErro.ERRO_VALIDACAO);
         return responderObjeto(headers, status, MENSAGEM_REQUISICAO_INVALIDA,
                 TipoErro.ERRO_VALIDACAO, MENSAGEM_INTERNA_REQUISICAO_NAO_TRATADA);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErroResponse> tratarErroInesperado(Exception excecao) {
-        log.error("Erro inesperado ao processar a requisição.", excecao);
+    public ResponseEntity<ErroResponse> tratarErroInesperado(Exception excecao, HttpServletRequest requisicao) {
+        // excecao como último argumento aciona o stack trace completo no SLF4J.
+        log.error("evento=erro_inesperado excecao={} metodo={} caminho={} status={} tipo_erro={}",
+                excecao.getClass().getSimpleName(), requisicao.getMethod(), requisicao.getRequestURI(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(), TipoErro.ERRO_INTERNO, excecao);
         return responder(HttpStatus.INTERNAL_SERVER_ERROR, MENSAGEM_ERRO_INTERNO, TipoErro.ERRO_INTERNO, MENSAGEM_INTERNA_ERRO_INTERNO);
+    }
+
+    // Assinatura fixada pela superclasse (ResponseEntityExceptionHandler) — daí o cast.
+    private static String metodoDe(WebRequest request) {
+        return request instanceof ServletWebRequest servletWebRequest && servletWebRequest.getHttpMethod() != null
+                ? servletWebRequest.getHttpMethod().name()
+                : "?";
+    }
+
+    private static String caminhoDe(WebRequest request) {
+        return request instanceof ServletWebRequest servletWebRequest
+                ? servletWebRequest.getRequest().getRequestURI()
+                : request.getDescription(false);
     }
 
     private ResponseEntity<ErroResponse> responder(HttpStatus status, String mensagem, TipoErro tipoErro, String mensagemInterna) {

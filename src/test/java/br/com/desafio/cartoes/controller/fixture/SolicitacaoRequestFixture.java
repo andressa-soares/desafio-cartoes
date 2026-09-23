@@ -31,6 +31,16 @@ public final class SolicitacaoRequestFixture {
         return new SolicitacaoRequestFixture();
     }
 
+    public SolicitacaoRequestFixture comNome(String nome) {
+        this.nome = nome;
+        return this;
+    }
+
+    public SolicitacaoRequestFixture comCpf(String cpf) {
+        this.cpf = cpf;
+        return this;
+    }
+
     public SolicitacaoRequestFixture comIdade(Integer idade) {
         this.idade = idade;
         return this;
@@ -38,6 +48,16 @@ public final class SolicitacaoRequestFixture {
 
     public SolicitacaoRequestFixture comDataNascimento(LocalDate dataNascimento) {
         this.dataNascimento = dataNascimento;
+        return this;
+    }
+
+    public SolicitacaoRequestFixture comEmail(String email) {
+        this.email = email;
+        return this;
+    }
+
+    public SolicitacaoRequestFixture comTelefoneWhatsapp(String telefoneWhatsapp) {
+        this.telefoneWhatsapp = telefoneWhatsapp;
         return this;
     }
 
@@ -54,7 +74,7 @@ public final class SolicitacaoRequestFixture {
     }
 
     public SolicitacaoRequestFixture comRendaMensal(String rendaMensal) {
-        this.rendaMensal = new BigDecimal(rendaMensal);
+        this.rendaMensal = rendaMensal == null ? null : new BigDecimal(rendaMensal);
         return this;
     }
 

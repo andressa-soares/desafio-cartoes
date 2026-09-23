@@ -4,6 +4,9 @@
 spring:
   application:
     name: desafio-cartoes
+  web:
+    resources:
+      add-mappings: false
 
 cartoes:
   idade-minima: 18

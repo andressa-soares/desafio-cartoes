@@ -277,6 +277,8 @@ o que em produção é um rolling restart via deploy, com a mudança versionada 
 | 13 | Anuidade de CARTAO_DE_PARCEIROS = 10,00 | Enunciado não define; valor de estudo, parametrizado |
 | 14 | Filtro de renda criado via `@Bean` e regras de perfil via `@Component` | O filtro é único e montado a partir do config; as regras são várias e descobertas automaticamente |
 | 15 | `Clock` injetado para idade e data da solicitação | Testes determinísticos, sem dependência da data real |
+| 16 | Só as validações exigidas pelo enunciado foram implementadas (campos obrigatórios, renda não negativa, idade mínima); sem validador ou anotação customizados | O enunciado dispensa validação de tipo/formato; anotações padrão do Bean Validation bastam |
+| 17 | Idade mínima e coerência idade/`data_nascimento` verificadas em `SolicitacaoMapper.toCliente`, não em anotação | Idade mínima vem de `cartoes.idade-minima` (não é constante de compilação, `@Min` não aceita); coerência cruza dois campos do DTO |
 
 ## 9. Ambiguidades do enunciado e resolução
 

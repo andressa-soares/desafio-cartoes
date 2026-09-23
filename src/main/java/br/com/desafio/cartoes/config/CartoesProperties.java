@@ -42,7 +42,7 @@ public record CartoesProperties(
         var resultado = new ArrayList<Produto>(produtos.size());
         for (ProdutoProperties produto : produtos) {
             if (!tiposVistos.add(produto.tipo())) {
-                throw new IllegalStateException("Tipo de cartão duplicado na configuração: " + produto.tipo());
+                throw new IllegalStateException("Tipo de cartão duplicado na configuração: " + produto.tipo() + ".");
             }
             resultado.add(new Produto(produto.tipo(), produto.rendaMinima(), produto.limite(), produto.anuidadeMensal()));
         }

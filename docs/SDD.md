@@ -276,6 +276,7 @@ o que em produção é um rolling restart via deploy, com a mudança versionada 
 | 12 | `BigDecimal` para valores monetários | Precisão e formato `0.00` exigido |
 | 13 | Anuidade de CARTAO_DE_PARCEIROS = 10,00 | Enunciado não define; valor de estudo, parametrizado |
 | 14 | Filtro de renda criado via `@Bean` e regras de perfil via `@Component` | O filtro é único e montado a partir do config; as regras são várias e descobertas automaticamente |
+| 15 | `Clock` injetado para idade e data da solicitação | Testes determinísticos, sem dependência da data real |
 
 ## 9. Ambiguidades do enunciado e resolução
 

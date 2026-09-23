@@ -4,9 +4,7 @@ import br.com.desafio.cartoes.domain.model.FaixaEtaria;
 
 import java.util.Objects;
 
-/* Faixas etárias que as regras de perfil consultam. Vêm da configuração, o que mantém as
-   regras livres de literais de negócio e permite alterar uma faixa sem tocar no código. */
-
+// Vêm da configuração: nenhuma faixa etária é literal nas regras que as consultam.
 public record ParametrosRegras(FaixaEtaria faixaJovem, FaixaEtaria faixaExcecaoResidenteSp) {
 
     public ParametrosRegras {

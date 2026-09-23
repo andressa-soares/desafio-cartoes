@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-// Resultado do processamento de um pedido de cartão.
-
 public record Solicitacao(
         UUID numero,
         LocalDateTime data,

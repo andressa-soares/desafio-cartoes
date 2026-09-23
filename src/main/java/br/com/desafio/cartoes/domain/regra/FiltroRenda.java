@@ -5,9 +5,7 @@ import br.com.desafio.cartoes.domain.model.Produto;
 
 import java.util.List;
 
-/* Seleciona os produtos cuja renda mínima o cliente atinge.
-   É a fronteira entre análise de crédito e adequação de perfil. */
-
+// Fronteira entre análise de crédito (aqui) e adequação de perfil (RegraElegibilidade).
 public class FiltroRenda {
 
     private final List<Produto> produtos;

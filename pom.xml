@@ -66,6 +66,22 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<!--
+					Padrão do Surefire só roda *Test.java/*Tests.java: os testes de
+					integração ponta a ponta (*IT.java) ficariam de fora de "mvn test".
+					Aqui eles rodam junto, sem depender do Failsafe/fase "verify".
+				-->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<includes>
+						<include>**/*Test.java</include>
+						<include>**/*Tests.java</include>
+						<include>**/*IT.java</include>
+					</includes>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 

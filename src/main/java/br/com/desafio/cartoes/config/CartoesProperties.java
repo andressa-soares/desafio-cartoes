@@ -16,11 +16,6 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-/*
- * Espelha o prefixo `cartoes` do application.yml e converte o que foi lido em
- * objetos de domínio. Nenhum valor de negócio é literal aqui: tudo chega pela
- * vinculação com o yml, validado antes de qualquer conversão.
- */
 @ConfigurationProperties(prefix = "cartoes")
 @Validated
 public record CartoesProperties(
@@ -41,10 +36,7 @@ public record CartoesProperties(
     ) {
     }
 
-    /*
-     * Preserva a ordem do yml, que é a ordem da resposta da API. Tipo repetido é
-     * erro de configuração, não de negócio: falha cedo, na subida da aplicação.
-     */
+    // Preserva a ordem do yml, que é a ordem da resposta da API.
     public List<Produto> toProdutos() {
         var tiposVistos = EnumSet.noneOf(TipoCartao.class);
         var resultado = new ArrayList<Produto>(produtos.size());

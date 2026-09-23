@@ -1,7 +1,5 @@
 package br.com.desafio.cartoes.domain.model;
 
-// Intervalo de idades com as duas bordas inclusivas.
-
 public record FaixaEtaria(int inicio, int fimInclusivo) {
 
     public FaixaEtaria {

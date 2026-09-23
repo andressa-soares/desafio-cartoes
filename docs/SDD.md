@@ -74,7 +74,8 @@ br.com.desafio.cartoes
 │   └── exception  (RegraNegocioException)
 └── config
     ├── CartoesProperties
-    └── CartoesConfig
+    ├── CartoesConfig
+    └── OpenApiController
 ```
 
 Organização por camada, adequada a um único contexto de negócio. Se surgir um segundo
@@ -300,6 +301,8 @@ o que em produção é um rolling restart via deploy, com a mudança versionada 
 | 16 | Só as validações exigidas pelo enunciado foram implementadas (campos obrigatórios, renda não negativa, idade mínima); sem validador ou anotação customizados | O enunciado dispensa validação de tipo/formato; anotações padrão do Bean Validation bastam |
 | 17 | Idade mínima e coerência idade/`data_nascimento` verificadas em `SolicitacaoMapper.toCliente`, não em anotação | Idade mínima vem de `cartoes.idade-minima` (não é constante de compilação, `@Min` não aceita); coerência cruza dois campos do DTO |
 | 18 | Log só de erro (`WARN`/`ERROR`), sem `INFO` | Logar toda requisição bem-sucedida é redundante e polui o log; ver seção 6.1 |
+| 19 | Swagger UI aponta para o `openapi.yaml` estático (`springdoc.swagger-ui.url`), sem gerar o contrato via anotação | Evita duas fontes de verdade divergindo; o arquivo já é completo (exemplos, todos os status) e anotação em DTO/controller só duplicaria isso |
+| 20 | `openapi.yaml` servido por `OpenApiController` (`@GetMapping` devolvendo `ClassPathResource`), não por `ResourceHandlerRegistry` | `ResourceHandlerRegistry` recusa location `classpath:/` (expõe o classpath inteiro); um endpoint dedicado a um único arquivo evita reabrir esse mapeamento genérico e dispensa reverter `spring.web.resources.add-mappings=false` |
 
 ## 9. Ambiguidades do enunciado e resolução
 

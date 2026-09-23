@@ -5,6 +5,10 @@ spring:
     resources:
       add-mappings: false
 
+springdoc:
+  swagger-ui:
+    url: /openapi.yaml
+
 cartoes:
   idade-minima: 18
   faixa-jovem:

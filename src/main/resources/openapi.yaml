@@ -127,7 +127,7 @@ paths:
                 detalhe_erro:
                   app: desafio-cartoes
                   tipo_erro: ERRO_VALIDACAO
-                  mensagem_interna: 'cliente.renda_mensal: deve ser maior ou igual a zero'
+                  mensagem_interna: 'renda_mensal: Não pode ser negativa.'
         '415':
           description: Content-Type diferente de `application/json`.
           content:

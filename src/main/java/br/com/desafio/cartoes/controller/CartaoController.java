@@ -6,6 +6,7 @@ import br.com.desafio.cartoes.controller.mapper.SolicitacaoMapper;
 import br.com.desafio.cartoes.domain.model.Cliente;
 import br.com.desafio.cartoes.domain.model.Solicitacao;
 import br.com.desafio.cartoes.service.SolicitacaoCartaoService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,7 +26,7 @@ public class CartaoController {
     }
 
     @PostMapping(path = "/cartoes", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<SolicitacaoResponse> solicitar(@RequestBody SolicitacaoRequest request) {
+    public ResponseEntity<SolicitacaoResponse> solicitar(@Valid @RequestBody SolicitacaoRequest request) {
         Cliente cliente = mapper.toCliente(request.cliente());
         Solicitacao solicitacao = service.solicitar(cliente);
 

@@ -1,6 +1,7 @@
 package br.com.desafio.cartoes.service;
 
 import br.com.desafio.cartoes.domain.exception.RegraNegocioException;
+import br.com.desafio.cartoes.domain.exception.TipoErro;
 import br.com.desafio.cartoes.domain.model.CartaoOfertado;
 import br.com.desafio.cartoes.domain.model.Cliente;
 import br.com.desafio.cartoes.domain.model.Produto;
@@ -24,7 +25,6 @@ import java.util.stream.Collectors;
 @Service
 public class SolicitacaoCartaoService {
 
-    private static final String TIPO_ERRO_RENDA_INSUFICIENTE = "RENDA_INSUFICIENTE";
     private static final String MENSAGEM_RENDA_INSUFICIENTE =
             "Renda mensal não atende à renda mínima de nenhum produto.";
 
@@ -41,7 +41,7 @@ public class SolicitacaoCartaoService {
     public Solicitacao solicitar(Cliente cliente) {
         List<Produto> candidatos = filtroRenda.aplicar(cliente);
         if (candidatos.isEmpty()) {
-            throw new RegraNegocioException(TIPO_ERRO_RENDA_INSUFICIENTE, MENSAGEM_RENDA_INSUFICIENTE);
+            throw new RegraNegocioException(TipoErro.RENDA_INSUFICIENTE, MENSAGEM_RENDA_INSUFICIENTE);
         }
 
         Set<TipoCartao> tiposAprovados = candidatos.stream()

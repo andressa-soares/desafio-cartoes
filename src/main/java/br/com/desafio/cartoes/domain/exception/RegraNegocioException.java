@@ -3,14 +3,14 @@ package br.com.desafio.cartoes.domain.exception;
 // Sem dependência de HTTP: converter tipoErro em status code é responsabilidade do controller/handler.
 public class RegraNegocioException extends RuntimeException {
 
-    private final String tipoErro;
+    private final TipoErro tipoErro;
 
-    public RegraNegocioException(String tipoErro, String mensagem) {
+    public RegraNegocioException(TipoErro tipoErro, String mensagem) {
         super(mensagem);
         this.tipoErro = tipoErro;
     }
 
-    public String tipoErro() {
+    public TipoErro tipoErro() {
         return tipoErro;
     }
 }

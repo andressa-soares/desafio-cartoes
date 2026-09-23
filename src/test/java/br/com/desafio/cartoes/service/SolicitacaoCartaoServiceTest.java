@@ -1,6 +1,7 @@
 package br.com.desafio.cartoes.service;
 
 import br.com.desafio.cartoes.domain.exception.RegraNegocioException;
+import br.com.desafio.cartoes.domain.exception.TipoErro;
 import br.com.desafio.cartoes.domain.model.CartaoOfertado;
 import br.com.desafio.cartoes.domain.model.StatusCartao;
 import br.com.desafio.cartoes.domain.model.TipoCartao;
@@ -49,7 +50,7 @@ class SolicitacaoCartaoServiceTest {
 
             assertThatExceptionOfType(RegraNegocioException.class)
                     .isThrownBy(() -> service.solicitar(cliente))
-                    .satisfies(excecao -> assertThat(excecao.tipoErro()).isEqualTo("RENDA_INSUFICIENTE"));
+                    .satisfies(excecao -> assertThat(excecao.tipoErro()).isEqualTo(TipoErro.RENDA_INSUFICIENTE));
         }
 
         @Test

@@ -8,9 +8,6 @@ import org.springframework.stereotype.Component;
 import java.util.Objects;
 import java.util.Set;
 
-/* Cliente na faixa jovem recebe apenas o cartão sem anuidade, qualquer que seja a renda.
-   Fora da faixa a regra não se aplica e os candidatos seguem intactos. */
-
 @Component
 public class RegraJovem implements RegraElegibilidade {
 

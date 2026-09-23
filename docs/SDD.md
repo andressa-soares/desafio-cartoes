@@ -219,6 +219,26 @@ Endpoint, campos e payloads seguem exatamente o enunciado (snake_case). Detalhes
 Toda exceção passa por um único `GlobalExceptionHandler`, que produz o payload
 `{codigo, mensagem, detalhe_erro}`.
 
+### 6.1 Logs
+
+Só existe log de erro — nenhum INFO, de propósito: logar cada requisição
+bem-sucedida é redundante (o próprio `200`/`204` já é a confirmação) e só
+dificulta achar o que importa em meio ao volume. `WARN` para 4xx (erro do
+cliente, sem stack trace — não ajuda a depurar payload mal formado ou renda
+negativa); `ERROR` para 5xx, com a exceção completa, já que é a única resposta
+não prevista.
+
+Toda linha de erro é estruturada em `campo=valor`: `evento` (categoria da
+ocorrência), `excecao` (nome da classe lançada), `metodo` e `caminho` da
+requisição, `status` HTTP e `tipo_erro`. Classe de origem e momento não entram
+na mensagem — já vêm de graça em cada linha via `%logger`/`%d` do Logback,
+duplicar seria redundante.
+
+Nunca entram no log, nem no de 500: CPF, e-mail, telefone, `data_nascimento` ou
+o payload — mesma restrição da resposta HTTP, porque log também é dado saindo
+do sistema. Isso vale porque toda mensagem de exceção no código é estática,
+sem interpolar dado do cliente; exceção nova deve manter essa disciplina.
+
 ## 7. Configuração
 
 Parâmetros de negócio ficam no `application.yml`, lidos por `CartoesProperties`
@@ -279,6 +299,7 @@ o que em produção é um rolling restart via deploy, com a mudança versionada 
 | 15 | `Clock` injetado para idade e data da solicitação | Testes determinísticos, sem dependência da data real |
 | 16 | Só as validações exigidas pelo enunciado foram implementadas (campos obrigatórios, renda não negativa, idade mínima); sem validador ou anotação customizados | O enunciado dispensa validação de tipo/formato; anotações padrão do Bean Validation bastam |
 | 17 | Idade mínima e coerência idade/`data_nascimento` verificadas em `SolicitacaoMapper.toCliente`, não em anotação | Idade mínima vem de `cartoes.idade-minima` (não é constante de compilação, `@Min` não aceita); coerência cruza dois campos do DTO |
+| 18 | Log só de erro (`WARN`/`ERROR`), sem `INFO` | Logar toda requisição bem-sucedida é redundante e polui o log; ver seção 6.1 |
 
 ## 9. Ambiguidades do enunciado e resolução
 
